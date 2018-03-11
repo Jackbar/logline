@@ -16,6 +16,12 @@ export default class IndexedDBLogger extends LoggerInterface {
         super(...args);
     }
 
+    static status:number;
+    static _pool:any;
+    static db:any;
+    static _database:any;
+    static request:any;
+
     /**
      * add a log record
      * @method _reocrd
@@ -25,15 +31,14 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @param {Mixed} [data] - additional data
      */
     _record(level, descriptor, data) {
-        if (IndexedDBLogger.status !== LoggerInterface.STATUS.INITED) {
+        if (IndexedDBLogger.status !== LoggerInterface['STATUS'].INITED) {
             IndexedDBLogger._pool.push(() => this._record(level, descriptor, data));
-            if (IndexedDBLogger.status !== LoggerInterface.STATUS.INITING) {
+            if (IndexedDBLogger.status !== LoggerInterface['STATUS'].INITING) {
                 IndexedDBLogger.init();
             }
             return;
         }
 
-        util.debug(this._namespace, level, descriptor, data);
         let transaction = IndexedDBLogger.db.transaction(['logs'], IDBTransaction.READ_WRITE || 'readwrite');
         transaction.onerror = event => util.throwError(event.target.error);
 
@@ -49,7 +54,7 @@ export default class IndexedDBLogger extends LoggerInterface {
         });
 
         request.onerror = event => {
-            IndexedDBLogger.status = LoggerInterface.STATUS.FAILED;
+            IndexedDBLogger.status = LoggerInterface['STATUS'].FAILED;
             util.throwError(event.target.error);
         };
     }
@@ -60,7 +65,7 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @static
      * @param {String} database - database name to use
      */
-    static init(database) {
+    static init(database?) {
         if (!IndexedDBLogger.support) {
             util.throwError('your platform does not support indexeddb protocol.');
         }
@@ -71,13 +76,13 @@ export default class IndexedDBLogger extends LoggerInterface {
 
         IndexedDBLogger._pool = IndexedDBLogger._pool || new Pool();
         IndexedDBLogger._database = database || 'logline';
-        IndexedDBLogger.status = super.STATUS.INITING;
+        IndexedDBLogger.status = super['STATUS'].INITING;
 
         IndexedDBLogger.request = window.indexedDB.open(IndexedDBLogger._database);
         IndexedDBLogger.request.onerror = event => util.throwError('protocol indexeddb is prevented.');
         IndexedDBLogger.request.onsuccess = event => {
             IndexedDBLogger.db = event.target.result;
-            IndexedDBLogger.status = super.STATUS.INITED;
+            IndexedDBLogger.status = super['STATUS'].INITED;
             IndexedDBLogger._pool.consume();
             // globally handle db request errors
             IndexedDBLogger.db.onerror = event => util.throwError(event.target.error);
@@ -101,8 +106,8 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @param {String} [to] - time end, unix time stamp or falsy
      * @param {Function} readyFn - function to call back with logs as parameter
      */
-    static get(from, to, readyFn) {
-        if (IndexedDBLogger.status !== super.STATUS.INITED) {
+    static get(from?, to?, readyFn?) {
+        if (IndexedDBLogger.status !== super['STATUS'].INITED) {
             return IndexedDBLogger._pool.push(() => IndexedDBLogger.get(from, to, readyFn));
         }
 
@@ -156,7 +161,7 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @param {Number} daysToMaintain - keep logs within days
      */
     static keep(daysToMaintain) {
-        if (IndexedDBLogger.status !== super.STATUS.INITED) {
+        if (IndexedDBLogger.status !== super['STATUS'].INITED) {
             return IndexedDBLogger._pool.push(() => IndexedDBLogger.keep(daysToMaintain));
         }
 
@@ -184,14 +189,14 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @static
      */
     static clean() {
-        if (IndexedDBLogger.status !== super.STATUS.INITED) {
+        if (IndexedDBLogger.status !== super['STATUS'].INITED) {
             return IndexedDBLogger._pool.push(() => IndexedDBLogger.clean());
         }
 
         // database can be removed only after all connections are closed
         IndexedDBLogger.db.close();
         let request = window.indexedDB.deleteDatabase(IndexedDBLogger._database);
-        request.onerror = event => util.throwError(event.target.error);
+        request.onerror = (event:any) => util.throwError(event.target.error);
         /* eslint no-unused-vars: "off" */
         request.onsuccess = event => {
             delete IndexedDBLogger.status;
@@ -223,11 +228,21 @@ export default class IndexedDBLogger extends LoggerInterface {
      * @prop {Boolean} support
      */
     static get support() {
-        const support = !!(window.indexedDB && window.IDBTransaction && window.IDBKeyRange);
+        const support = !!('indexedDB' in window && 'IDBTransaction' in window && 'IDBKeyRange' in window);
         if (support) {
-            window.IDBTransaction.READ_WRITE = 'readwrite';
-            window.IDBTransaction.READ_ONLY = 'readonly';
+            //@ts-ignore
+            IDBTransaction.READ_WRITE = IDBTransaction.READ_WRITE || 'readwrite';
+            //@ts-ignore
+            IDBTransaction.READ_ONLY = 'readonly';
         }
         return support;
     }
 }
+
+declare var IDBTransaction: {
+    prototype: IDBTransaction;
+    new(): IDBTransaction;
+    readonly READ_ONLY: string;
+    readonly READ_WRITE: string;
+    readonly VERSION_CHANGE: string;
+};

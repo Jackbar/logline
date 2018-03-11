@@ -4,13 +4,14 @@ import * as util from '../lib/util';
  * Logline Interface
  * @class Interface
  */
-export default class Interface {
+export default class Logger {
+    protected _namespace:string;
     /**
      * Logline constructor
      * @constructor
      * @param {String} namespace - namespace to use
      */
-    constructor(namespace) {
+    constructor(namespace?) {
         this._namespace = namespace;
     }
 
@@ -22,7 +23,7 @@ export default class Interface {
      * @param {String} descriptor - to speed up search and improve understanding
      * @param {Mixed} [data] - additional data
      */
-    _record(level, descriptor, data) {
+    _record(level, descriptor?, data?) {
         util.throwError('method _record is not implemented.');
     }
 
@@ -72,8 +73,7 @@ export default class Interface {
      * @static
      * @param {String} database - database name to use
      */
-    static init(database) {
-        return true;
+    static init(database?) {
     }
 
     /**
@@ -85,7 +85,7 @@ export default class Interface {
      * @param {Number} [relative] - relative time to compare, default Date.now()
      * @return {Number|NaN} timestamp transformed
      */
-    static transTimeFormat(time, relative) {
+    static transTimeFormat(time, relative?) {
         // if falsy value or timestamp already, pass it through directly,
         if (!time || /^\d{13}$/.test(time)) {
             return +time;
@@ -135,7 +135,7 @@ export default class Interface {
      * protocol status map
      * @prop {Object} STATUS
      */
-    static get STATUS() {
+    public static get STATUS() {
         return {
             INITING: 1,
             INITED: 2,

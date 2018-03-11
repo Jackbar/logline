@@ -16,6 +16,11 @@ export default class WebsqlLogger extends LoggerInterface {
         super(...args);
     }
 
+    static status:number;
+    static _db:any;
+    static _database:string;
+    static _pool:any;
+
     /**
      * add a log record
      * @method _reocrd
@@ -25,16 +30,15 @@ export default class WebsqlLogger extends LoggerInterface {
      * @param {Mixed} [data] - additional data
      */
     _record(level, descriptor, data) {
-        if (WebsqlLogger.status !== LoggerInterface.STATUS.INITED) {
+        if (WebsqlLogger.status !== LoggerInterface['STATUS'].INITED) {
             WebsqlLogger._pool.push(() => this._record(level, descriptor, data));
-            if (WebsqlLogger.status !== LoggerInterface.STATUS.INITING) {
+            if (WebsqlLogger.status !== LoggerInterface['STATUS'].INITING) {
                 WebsqlLogger.init();
             }
             return;
         }
 
         try {
-            util.debug(this._namespace, level, descriptor, data);
             WebsqlLogger._db.transaction(tx => {
                 tx.executeSql(
                     'INSERT INTO logs (time, namespace, level, descriptor, data) VALUES(?, ?, ?, ? ,?)',
@@ -52,7 +56,7 @@ export default class WebsqlLogger extends LoggerInterface {
      * @static
      * @param {String} database - database name to use
      */
-    static init(database) {
+    static init(database?) {
         if (!WebsqlLogger.support) {
             util.throwError(new Error('your platform does not support websql protocol.'));
         }
@@ -63,7 +67,7 @@ export default class WebsqlLogger extends LoggerInterface {
 
         WebsqlLogger._pool = WebsqlLogger._pool || new Pool();
         WebsqlLogger._database = database || 'logline';
-        WebsqlLogger.status = super.STATUS.INITING;
+        WebsqlLogger.status = super['STATUS'].INITING;
 
         try {
             WebsqlLogger._db = window.openDatabase(WebsqlLogger._database, '1.0', 'cats loves logs', 4.85 * 1024 * 1024);
@@ -71,11 +75,11 @@ export default class WebsqlLogger extends LoggerInterface {
                 tx.executeSql(
                     'CREATE TABLE IF NOT EXISTS logs (time, namespace, level, descriptor, data)', [],
                     () => {
-                        WebsqlLogger.status = super.STATUS.INITED;
+                        WebsqlLogger.status = super['STATUS'].INITED;
                         WebsqlLogger._pool.consume();
                     },
                     () => {
-                        WebsqlLogger.status = super.STATUS.FAILED;
+                        WebsqlLogger.status = super['STATUS'].FAILED;
                     }
                 );
             });
@@ -92,7 +96,7 @@ export default class WebsqlLogger extends LoggerInterface {
      * @param {Function} readyFn - function to call back with logs as parameter
      */
     static get(from, to, readyFn) {
-        if (WebsqlLogger.status !== super.STATUS.INITED) {
+        if (WebsqlLogger.status !== super['STATUS'].INITED) {
             return WebsqlLogger._pool.push(() => WebsqlLogger.get(from, to, readyFn));
         }
 
@@ -134,7 +138,7 @@ export default class WebsqlLogger extends LoggerInterface {
      * @param {Number} daysToMaintain - keep logs within days
      */
     static keep(daysToMaintain) {
-        if (WebsqlLogger.status !== super.STATUS.INITED) {
+        if (WebsqlLogger.status !== super['STATUS'].INITED) {
             return WebsqlLogger._pool.push(() => WebsqlLogger.keep(daysToMaintain));
         }
 
@@ -165,7 +169,7 @@ export default class WebsqlLogger extends LoggerInterface {
      * @static
      */
     static clean() {
-        if (WebsqlLogger.status !== super.STATUS.INITED) {
+        if (WebsqlLogger.status !== super['STATUS'].INITED) {
             WebsqlLogger._pool.push(() => WebsqlLogger.clean());
             return;
         }

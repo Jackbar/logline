@@ -5,12 +5,13 @@ import uglify from 'rollup-plugin-uglify';
 import license from 'rollup-plugin-license';
 import serve from 'rollup-plugin-serve';
 import livereload from 'rollup-plugin-livereload';
+import typescript from 'rollup-plugin-typescript2';
 import * as jsonfile from 'jsonfile';
 
 const pkg = jsonfile.readFileSync('./package.json');
 
 export default {
-    entry: 'src/' + pkg.name + '.js',
+    entry: 'src/' + pkg.name + '.ts',
     dest: 'dist/' + pkg.name + (process.env.NODE_ENV === 'production' ? '.min' : '') + '.js',
     format: 'umd',
     moduleName: pkg.name.replace(/^\w/, starter => starter.toUpperCase()),
@@ -19,6 +20,7 @@ export default {
         babel({
             exclude: 'node_modules/**'
         }),
+        typescript(),
         (process.env.NODE_ENV === 'production' && uglify()),
         license({
             banner: {

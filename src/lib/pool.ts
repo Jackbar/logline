@@ -3,6 +3,7 @@
  * @class Pool
  */
 export default class Pool {
+    private _pool:object[];
     /**
      * Pool constructor
      * @constructor

@@ -3,17 +3,19 @@ import * as path from 'path';
 import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
 import license from 'rollup-plugin-license';
+import typescript from 'rollup-plugin-typescript2';
 import * as jsonfile from 'jsonfile';
 
 const pkg = jsonfile.readFileSync('./package.json');
 
 export default {
-    entry: 'src/' + pkg.name + '.js',
+    entry: 'src/' + pkg.name + '.ts',
     dest: 'dist/' + pkg.name + (process.env.NODE_ENV === 'production' ? '.min' : '') + '.js',
     format: 'umd',
     moduleName: pkg.name.replace(/^\w/, starter => starter.toUpperCase()),
     sourceMap: process.env.NODE_ENV === 'production',
     plugins: [
+        typescript(),
         babel({
             exclude: 'node_modules/**'
         }),

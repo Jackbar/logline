@@ -20,6 +20,11 @@ class Logline {
         return new Logline._protocol(namespace);
     }
 
+    static _protocol: any;
+    static _database: any;
+    static PROTOCOL: object;
+    static INTERFACE: object;
+
     /**
      * choose a protocol to initialize
      * @method _initProtocol
@@ -64,7 +69,7 @@ class Logline {
      * @param {String} [to] - time end
      * @param {Function} readyFn - function to call back with logs as parameter
      */
-    static get(from, to, readyFn) {
+    static get(from, to?, readyFn?) {
         Logline._checkProtocol();
 
         switch (arguments.length) {
@@ -163,10 +168,5 @@ Logline.PROTOCOL = {
 
 // export protocol interface for user custom implements
 Logline.INTERFACE = Object.freeze(Interface);
-
-// export Logline env, just like Unix Environment variables
-Logline.env = {
-    verbose: true
-};
 
 export default Logline;

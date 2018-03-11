@@ -15,6 +15,9 @@ export default class LocalStorageLogger extends LoggerInterface {
         super(...args);
     }
 
+    static _database:any;
+    static status:number;
+
     /**
      * add a log record
      * @method _reocrd
@@ -33,7 +36,6 @@ export default class LocalStorageLogger extends LoggerInterface {
             data
         ]);
         try {
-            util.debug(this._namespace, level, descriptor, data);
             window.localStorage.setItem(LocalStorageLogger._database, JSON.stringify(logs));
         } catch (e) { util.throwError('error inserting record'); }
     }
@@ -44,7 +46,7 @@ export default class LocalStorageLogger extends LoggerInterface {
      * @static
      * @param {String} database - database name to use
      */
-    static init(database) {
+    static init(database?) {
         if (!LocalStorageLogger.support) {
             util.throwError('your platform does not support localstorage protocol.');
         }
@@ -52,7 +54,7 @@ export default class LocalStorageLogger extends LoggerInterface {
         if (!window.localStorage.getItem(LocalStorageLogger._database)) {
             window.localStorage.setItem(LocalStorageLogger._database, JSON.stringify([]));
         }
-        LocalStorageLogger.status = super.STATUS.INITED;
+        LocalStorageLogger.status = super['STATUS'].INITED;
     }
 
     /**

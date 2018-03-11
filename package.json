@@ -29,6 +29,7 @@
   },
   "homepage": "https://github.com/latel/logline#readme",
   "devDependencies": {
+    "@types/websql": "0.0.27",
     "babel-core": "^6.7.7",
     "babel-preset-es2015-rollup": "^3.0.0",
     "chai": "^3.5.0",
@@ -42,7 +43,9 @@
     "rollup-plugin-license": "^0.2.0",
     "rollup-plugin-livereload": "^0.6.0",
     "rollup-plugin-serve": "^0.4.2",
+    "rollup-plugin-typescript2": "^0.12.0",
     "rollup-plugin-uglify": "^1.0.1",
-    "rollup-watch": "^4.3.1"
+    "rollup-watch": "^4.3.1",
+    "typescript": "^2.7.2"
   }
 }
