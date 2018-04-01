@@ -1,6 +1,6 @@
 // throw out Errors, with global prefix 'Logline: ' ahead of err.message
 export function throwError(errMessage) {
-    throw new Error('Logline: ' + errMessage);
+    console && console.error('Logline: ' + errMessage);
 }
 
 // filter any function in a object
