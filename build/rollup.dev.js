@@ -17,10 +17,10 @@ export default {
     moduleName: pkg.name.replace(/^\w/, starter => starter.toUpperCase()),
     sourceMap: process.env.NODE_ENV === 'production',
     plugins: [
+        typescript(),
         babel({
             exclude: 'node_modules/**'
         }),
-        typescript(),
         (process.env.NODE_ENV === 'production' && uglify()),
         license({
             banner: {
@@ -34,7 +34,7 @@ export default {
         serve({
             contentBase: './',
             open: true
-        }),
-        livereload()
+        })
+        // livereload()
     ]
 };

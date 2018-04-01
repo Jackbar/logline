@@ -3,12 +3,13 @@
   "version": "1.0.7",
   "description": "logs for the frontend",
   "main": "dist/logline.min.js",
+  "types": "typing/logline.d.ts",
   "scripts": {
     "test": "mocha-headless-chrome -f test/index.html -a no-sandbox",
     "dev": "rollup -c build/rollup.dev.js -w",
     "build:dev": "rollup -c build/rollup.build.js",
     "build:prod": "cross-env NODE_ENV=production rollup -c build/rollup.build.js",
-    "build": "npm run build:dev && npm run build:prod && npm run test"
+    "build": "npm run build:dev && npm run build:prod"
   },
   "repository": {
     "type": "git",
@@ -47,5 +48,8 @@
     "rollup-plugin-uglify": "^1.0.1",
     "rollup-watch": "^4.3.1",
     "typescript": "^2.7.2"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.3.1"
   }
 }
