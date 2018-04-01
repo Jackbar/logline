@@ -5,177 +5,263 @@ Logline
 
 [![Build Status][travis-image]][travis-url]
 
-Logline is a light-weighted, useful log agent for front-end on the client-side.
+Logline is a persistent HTML5 log agent with simple but powerful chaining CRUD API.
 
-Why position problems is difficult for the front-end?
----------------------------------------------------
-Most front-enders should have similar experience, when codes are deployed for production, running on countless clients. In most caes, we can only guess the problems, especially some occasional visible problems, because we have no idea what's our user's acctual operations, thus it's hard for us to reproduce the scenes. At this moment, we think, it will be great help if we have a detailed and classified log agent, just like the backend do.
-
-Application scenario
--------------------
-+ Reproduce user operations
-
-    In the production environment, user's operations are un-predicable, even they
-    cannot remember the details themselves, with log, we have the ability to
-    reproduce the operation paths and running state.
-
-+ Monitoring core processes
-
-    In the core processes in our products, we can upload the logs positively,
-    as we can focus our user's problems and count the amount quickly.
-
-+ Positively get user's logs and analysis user's activities
-
-    Don't believe on the users to coordinate you, we can design a strategy, such as
-    deploy an json file online, configure a list containing the target users we
-    wanted, when our product is opened on their client, they will download this
-    json file after a certain delay(to prevent affections on the core process's
-    performance), if the user id is in the list, we will upload the logs positively.
-
-+ Count errors and help to analysis
-
-    We can make use of Logline to count js errors. With the error stack, we can speed
-    up the analysis.
+Logline have multiple store implements, and come with a `localstorage store` built-in as fallback when other stores are unavailable.
 
 Features
 -------
 
-+ No extra dependencies
-+ client-side(reach when acctually needed, save bandwith and traffic)
-+ multiple filter dimension(namespace, degree and keyword)
-+ multiple stores(IndexDB, Websql, localStorage)
-+ cleanable(in case take too much user space)
++ no extra dependencies
++ persist storage on the client using HTML5 webstorage
++ multiple stores, such as indexDB, websql, localStorage and wechat mini app
++ powerful CRUD API
 
 Quick to get started
 -------------------
 
-### 1. Installation
+To use logline, just drop a single Javascript file into your page:
 
-#### with Bower
+```html
+<script src="logline/dist/logline.js"></script>
+<script>new Logline('app').info('hello world');</script>
+```
 
-``` shell
+Download the [latest logline from GitHub](https://github.com/latel/logline/releases/latest), or install with npm:
+
+```shell
+npm install logline --save-dev
+```
+
+or bower
+
+```shell
 bower install logline
 ```
 
-#### Download archive
-access [https://github.com/latel/logline/releases](https://github.com/latel/logline/releases), selecte the version you wanted.
+Configuration
+-------------
 
-### 2. Import to your project
-Logline is an UMD ready module, choose to import it as your project needed.
-CMD is evil, which is not supported, wrapper it yourself if you need it indeed.
+you can use `config()` method to configure Logline's default settings, such as store and database name.
 
-``` javascript
-// using <script> element
-<script src="./mod/logline.min.js"></script>
-
-// using AMD loader
-var Logline = require('./mod/logline.min');
-```
-### 3. Choose a log protocol
-Logline implements three protocols, all of them are mounted on the `Logline` object for special uses, together with better semantics.
-
-+ `websql:` Logline.PROTOCOL.WEBSQL
-+ `indexeddb:` Logline.PROTOCOL.INDEXEDDB
-+ `localstorage:` Logline.PROTOCOL.LOCALSTORAGE
-
-you can use `using` method to specialfy a protocol.
-
-``` javascript
-Logline.using(Logline.PROTOCOL.WEBSQL);
-```
-
-***If you call Logline related APIs, without specialfy a protocol in advance***, Logline will choose a available protocol automatically, respect the priority according to the configuration parameters during the compile process.
-
-such as, your compile command is `npm run configure -- --with-indexeddb --with-websql --with-localstorage`,
-if protocol indexeddb is available, then indexeddb protocol with be chosen automatically,
-otherwise, if indexeddb protocol is not available and websql protocol is available, then websql protocol will be chosen, and so on.
-
-If none of the compiled protocols are available, an error will be thrown.
-
-#### 4. Record logs
-``` javascript
-var spaLog = new Logline('spa'),
-    sdkLog = new Logline('sdk');
-
-// with description, without extra data
-spaLog.info('init.succeed');
-
-// with description and extra data
-spaLog.error('init.failed', {
-	retcode: 'EINIT',
-	retmsg: 'invalid signature'
-});
-
-// with description, without extra data
-sdkLog.warning('outdated');
-
-// with description and extra data
-sdkLog.critical('system.vanish', {
-    // debug infos here
+```javascript
+Logline.config({
+    store: Logline.STORE.WEBSQL, // Force WebSQL, same as using setStore() 
+    database: 'logline', // database name to use, same as using setStore() or database()
+    level: 'info' // now only logs have higher level than `info` will be recorded
 });
 ```
 
-### 5. Read logs
-``` javascript
-// collect all logs
-Logline.all(function(logs) {
-    // process logs here
-});
+use `setStore()` to select certain store implement to use.
 
-// collet logs within .3 days
-Logline.get('.3d', function(logs) {
-    // process logs here
-});
+```javascript
+Logline.setStore(Logline.STORE.WEBSQL);
+```
 
-// collect logs from 3 days before, and earlier than 1 days ago
-Logline.get('3d', '1d', function(logs) {
-    // process logs here
+use `database()` to provide a database name.
+
+```javascript
+Logline.database('_new_logline_database__');
+```
+
+Write Logs
+----------
+
+### Instances
+
+Before you make any log, you must create a Logline instance, Logline can produces as many as instances as possible, just like there is many modules in your code base.
+
+It's a better practise to create instance for every module with similar module name.
+
+```javascript
+let appLogger = new Logline('app'); // app is the namespace
+let sdkLogger = new Logline('sdk'); // sdk is the namespace
+```
+
+There are several writing API on every instance, referring the log level you wanted: 
+
+`debug` < `info` < `warn` < `error` < `critical`.
+
+```javascript
+appLogger.debug('app is now starting');
+sdkLogger.info('calling api');
+sdkLogger.warn('components Layer has un-normal border');
+sdkLogger.error('api `getNetworkd` response with invalid data');
+appLogger.critical('system is shutting down due to invalid sdk call');
+```
+
+
+Query Logs
+----------
+
+Logline implements several API to help you remove logs under `Logline.q` namespace.
+
+### Logline.q.last(num: number = 100): Promise
+
+query newest number of logs.
+
+```javascript
+// query logs using a Date object
+Logline.q.last(200, res => console.table(res));
+```
+
+### Logline.q.before(time: Date|number, callback?: callback): Promise
+
+query logs that before a given timestamp.
+
+```javascript
+// query logs using a Date object
+Logline.q.before(new Date('2018-01-30T14:07:25'), res => console.table(res));
+
+// query logs using a timestamp
+Logline.q.before(1522390247400, res => console.table(res));
+
+// query logs using a relative time base on current time
+Logline.q.before(- 24 * 60 * 60 * 1000, res => console.table(res));
+
+// Logline also support Promise gramma
+Logline.q.before(- 24 * 60 * 60 * 1000).then(res => console.table(res));
+
+// thus Logline.q API can easily react with yield
+let logs = yield Logline.q.before(- 24 * 60 * 60 * 1000);
+
+// of course async/await is the same
+async (() => let logs = await Logline.q.before(- 24 * 60 * 60 * 1000););
+```
+
+### Logline.q.after(time: Date|number, callback?: function): Promise
+
+query logs that after a given timestamp.
+
+```javascript
+// query logs using a Date object
+Logline.q.after(new Date('2018-01-30T14:07:25'), res => console.table(res));
+
+// query logs using a timestamp
+Logline.q.after(1522390247400, res => console.table(res));
+
+// query logs using a relative time base on current time
+Logline.q.after(- 24 * 60 * 60 * 1000, res => console.table(res));
+```
+
+### Logline.q.within(start: Date|number, end: Date|number, callback?: function): Promise
+
+query logs between given time range.
+
+```javascript
+Logline.q.within(-60 * 60 * 1000, -30 * 60 * 1000, res => console.table(res));
+Logline.q.within(new Date('20180329T230100'), -30 * 60 * 1000).then(res => console.table(res));
+```
+
+Logline also provides chaining API with can with above API:
+
+### filter(method: string|RegExp|object|function): Promise
+
+### filter logs with description property
+
+provide a string or RegExp as the only parameter.
+
+```javascript
+Logline.last().filter('userinfo').then(res => console.table(res));
+Logline.last().filter(/userinfo|id/i).then(res => console.table(res));
+```
+
+provide a object descriptor to make detailed filtering.
+
+```javascript
+Logline.last().filter({
+    module: /app.*/,
+    description: 'userinfo', 
+    level: 'info'
+}).then(res => console.table(res));
+```
+
+provide a function to make more powerful filtering.
+
+```javascript
+Logline.last().filter(log => {
+    return /app.*/.test(log.namespace)
+    	&& -1 < log.description.indexOf('userinfo')
+    	&& log.level === 'info';
+}).then(res => console.table(res));
+```
+
+Delete Logs
+-----------
+
+### Using with *Logline.q*
+
+you can use `Logline.q` related API to query and filter target logs, and then use `remove()` to remove them wisely.
+
+```javascript
+Logline.q.after(-24*60*60*1000).remove();
+Logline.q.last(100).filter(/sdk/).remove();
+```
+
+Logline also implements several API to help you remove logs under `Logline.d` namespace.
+
+### Logline.d.last(num: number = 100): Promise
+
+query logs that before a given timestamp, similar to `Logline.q.last`
+
+### Logline.d.before(time: Date|number): Promise
+
+query logs that before a given timestamp, similar to `Logline.q.before`
+
+### Logline.d.after(time: Date|number): Promise
+
+query logs that before a given timestamp, similar to `Logline.q.after`
+
+### Logline.d.within(startTime: Date|number, endTime: Date|number): Promise
+
+query logs that before a given timestamp, similar to `Logline.q.within`
+
+Events
+------
+
+Logline implements pub/sub model, you can use `on()` method to watch particular events.
+
+```javascript
+Logline.on('beforeRecord', data => {
+    // you can modify the properties in data which will to be recorded
+    data.namespace = `app:${data.namespace}`;
 });
 ```
 
-### 6. Clean logs
-``` javascript
-Logline.keep(.5); // keep logs within half a day, if `.5` is not provided, will clean up all logs
-Logline.clean(); // clean all logs and delete database
-```
+All watchable events are listed below:
+
+name | data example
+---- | ---------------
+beforeRecord | { namespace: 'app', level: 'debug', descriptions: '', data: '' }
+beforeDelete | number[], timestamp arrays indicates logs to delete.
+error |  { store: 'localstorage', message: 'a text description about this error' }
+databaseClosing | *storage specialfied*
+databaseClosed | *storage specialfied*
+databaseOpening | *storage specialfied*
+databaseOpened | *storage specialfied*
+queryStart | *storage specialfied*
+queryEnd | LogContent[]
+
 
 Custom database name
 -------------------
-Because indexeddb, websql and localstorage are all domain shared storage, the default database name `logline` may have already been taken, you can specialfy a custom database name in two ways as follows:
+Because indexeddb, websql and localstorage respect same domain policy, the default database name `logline` may have already been taken by other utilities. In this situation you can specialfy a custom database name as follows:
 
 ``` javascript
-// special a second parameter when calling `using` API
-Logline.using(Logline.PROTOCOL.WEBSQL, 'newlogline');
+// special a second parameter when calling `setStore` API
+Logline.setStore(Logline.PROTOCOL.WEBSQL, 'new_database_name');
 
 // call `database` API
-Logline.database('newlogline');
-```
-
-Custom Compile
---------------
-Logline implements `localstorage`, `websql` and `indexeddb` protocols, all of them are compiled by default, if you don't need all of them, you can use `npm run configure` and `npm run build` to compile your custom build with partial protocols packed. This helps to reduces the package size.
-
-``` shell
-// pack all protocols with no parameters
-npm run configure
-// pack only wanted protocols, remove corresponding --with-xx
-npm run configure -- --with-localstorage --with-websql
-
-// re-compile
-npm run build
-// find the custom build in dist fold
-ls -l dist/
+Logline.database('new_database_name');
 ```
 
 FAQ
 ---
 
 ### How to upload logs
-since v1.0.1, log upload ability is removed, as the upload procedures varies upon different projects,
-and we do hope Logline to focus on log recording and maintenance.
-Anyway, you can still use `Logline.all` and `Logline.get` to get the logs,
-and implement your own upload procedure.
+we hope Logline can focus on log recording and mupulations, thus you can use `Logline.q` API to query and filter logs you wanted and upload in your own manner.
 
+There is a plugin which may help you [logline-plugin-upload](https://github.com/logline-plugins/upload).
 
 
 [travis-image]: https://api.travis-ci.org/latel/logline.svg
