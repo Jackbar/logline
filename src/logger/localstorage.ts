@@ -101,29 +101,25 @@ class LocalstorageLogger extends Logger {
     static status: number = Logger.STATUS.INITIAL;
     static cacheQueue: descriptor[] = [];
     static cacheWriteTimer: number;
-    static lastRecordTimestamp: number = 0;
     constructor(namespace: string) {
         super(namespace);
     }
 
     record(level: LEVEL, description: string, data: any = ''): void {
         try {
-            let timestamp = Date.now();
-            // in case timestamp duplicated when writing logs too much frequently
-            if (LocalstorageLogger.lastRecordTimestamp === timestamp) {
-                setTimeout(() => this.record(level, description, data));
-                return;
-            }
+            let timestamp = Logger.uniqueTimestamp();
             let caches = LocalstorageLogger.cacheQueue;
             clearTimeout(LocalstorageLogger.cacheWriteTimer);
             caches.push([timestamp, level, this.namespace, description, data]);
-            LocalstorageLogger.lastRecordTimestamp = timestamp;
             // if cache is full, write to databse and clean it up again
             if (caches.length >= MAX_CACHE_SIZE) {
                 write();
             } else {
                 // write cache to database periodically
-                LocalstorageLogger.cacheWriteTimer = setTimeout(() => write(), 200);
+                LocalstorageLogger.cacheWriteTimer = setTimeout(
+                    () => write(),
+                    200
+                );
             }
         } catch (e) {
             return event.fire('error', {
@@ -144,10 +140,6 @@ class LocalstorageLogger extends Logger {
         return (
             JSON.parse(localStorage.getItem(LocalstorageLogger.database)) || []
         );
-    }
-
-    static clean() {
-        localStorage.removeItem(LocalstorageLogger.database);
     }
 
     static support() {

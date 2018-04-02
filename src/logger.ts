@@ -1,9 +1,11 @@
 import * as util from './lib/util';
 
 class Logger implements iLogger {
+    static lastRecordTime: number;
     constructor(protected namespace: string) {
     }
 
+    // FIXME: description generation is not working correctly
     parseDescriptionData(...descriptions: any[]) {
         var description = '', i = 0, data;
         for (; i < descriptions.length - 2; i++) {
@@ -42,6 +44,16 @@ class Logger implements iLogger {
     critical(...descriptions) {
         let result = this.parseDescriptionData(...descriptions);
         return this.record('critical', result.description, result.data);
+    }
+
+    // ensure that every log get a unique timestamp
+    // in case timestamp duplicated when writing logs too much frequently
+    static uniqueTimestamp() {
+        let time = Date.now();
+        while (time <= Logger.lastRecordTime) {
+            time++;
+        }
+        return Logger.lastRecordTime = time;
     }
 
     static STATUS = {
