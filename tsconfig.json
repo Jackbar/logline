@@ -3,7 +3,7 @@
     "module": "es2015",
     "target": "es5",
     "sourceMap": true,
-    "outDir": "./lib",
+    "outDir": "./dist",
     "lib": [
       "dom",
       "es5",
@@ -11,12 +11,9 @@
     ],
     "typeRoots": [
       "./node_modules/@types",
-      "./types"
+      "./typings"
     ]
   },
-  "include": [
-    "./src/**/*"
-  ],
   "exclude": [
     "node_modules"
   ]

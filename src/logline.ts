@@ -25,13 +25,13 @@ class Logline {
     static plugin(pluginDef: PluginDef) {
         let { name, mounts, events } = pluginDef;
         if (!name) {
-            return event.fire('error', { identifier: 'Logline', description: 'plugin must have a unique name' });
+            return event.fire('error', { identifier: 'Logline', message: 'plugin must have a unique name' });
         }
         if (mounts) {
             for (let api in mounts) {
                 if (mounts.hasOwnProperty(api)) {
                     if (Logline[api]) {
-                        event.fire('error', { identifier: 'Logline', description: `plugin ${name} is mouting an already existed api ${api}` });
+                        event.fire('error', { identifier: 'Logline', message: `plugin ${name} is mouting an already existed api ${api}` });
                     }
                     Logline[api] = mounts[api];
                 }
