@@ -1,21 +1,29 @@
+
+const NAME = 'logline';
 const LEVEL_CONSOLE_MAP = {
+    DEBUG: 'warn',
     INFO: 'log',
     WARN: 'warn',
     ERROR: 'error',
     CRITICAL: 'error'
 };
 
+let hasConsole = false;
+
 export default {
     name: 'console',
     init() {
-        return typeof console !== 'undefined';
+        return (hasConsole = typeof console !== 'undefined');
     },
     events: {
         beforeRecord(data) {
-            console[LEVEL_CONSOLE_MAP[data.level.toUpperCase()] || LEVEL_CONSOLE_MAP.INFO](`${data.namespace} ${data.level.toUpperCase()} ${data.description}`, data.data);
+            hasConsole && console[LEVEL_CONSOLE_MAP[data.level.toUpperCase()] || LEVEL_CONSOLE_MAP.INFO](`${data.namespace} ${data.level.toUpperCase()} ${data.description}`, data.data);
         },
         error(error) {
-            console[LEVEL_CONSOLE_MAP.ERROR](`${error.message} ERROR ${error.description}`);
+            hasConsole && console[LEVEL_CONSOLE_MAP.ERROR](`${error.identifier} ERROR ${error.message}`);
+        },
+        debug(data) {
+            hasConsole && console[LEVEL_CONSOLE_MAP.DEBUG](`${NAME} DEBUG ${data}`);
         }
     }
 };

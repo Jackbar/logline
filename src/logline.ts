@@ -23,9 +23,12 @@ class Logline {
     }
 
     static plugin(pluginDef: PluginDef) {
-        let { name, mounts, events } = pluginDef;
+        let { name, init, mounts, events } = pluginDef;
         if (!name) {
             return event.fire('error', { identifier: 'Logline', message: 'plugin must have a unique name' });
+        }
+        if (typeof init === 'function') {
+            init();
         }
         if (mounts) {
             for (let api in mounts) {
@@ -55,8 +58,44 @@ class Logline {
         event.off(name);
     }
 
+    // TODO: remove me, this is a private api
     static fire(name, data) {
         event.fire(name, data);
+    }
+
+    /**
+     * query logs based on time range
+     * @deprecated use Logline.q instead
+     */
+    static get(): LogContent[] {
+        event.fire('debug', 'api get is deprecated, and will be removed after next major release');
+        return [];
+    }
+
+    /**
+     * query all logs
+     * @deprecated use Logline.q instead
+     */
+    static all(): LogContent[] {
+        event.fire('debug', 'api all is deprecated, and will be removed after next major release');
+        return [];
+    }
+
+    /**
+     * delete logs based on time range
+     * @deprecated use Logline.d instead
+     */
+    static keep(): void {
+        event.fire('debug', 'api keep is deprecated, and will be removed after next major release');
+    }
+
+    /**
+     * delete logline's database
+     * @deprecated logline's database no longer has any programmatic api to remove
+     */
+    static clean(): void {
+        event.fire('debug', 'api clean is deprecated, and will be removed after next major release');
+        event.fire('debug', 'logline\'s database no longer has any programmatic api to remove');
     }
 }
 
