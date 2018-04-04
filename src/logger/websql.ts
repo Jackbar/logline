@@ -1,9 +1,14 @@
 import Logger from '../logger';
+import Pool from '../lib/pool';
 import * as util from "../lib/util";
 import * as event from '../lib/event';
 
 
-class LoggerWebSQL extends Logger implements iLogger {
+class LoggerWebSQL extends Logger {
+    static database: string = 'logline';
+    static db: any;
+    static pool = new Pool();
+    static status: number = Logger.STATUS.INITIAL;
     constructor(namespace: string) {
         super(namespace);
     }
@@ -12,14 +17,31 @@ class LoggerWebSQL extends Logger implements iLogger {
     }
 
     static init(database: string = 'logline') {
-        return true;
+        return new Promise((resolve, reject) => {
+            try {
+                LoggerWebSQL.db = window.openDatabase(LoggerWebSQL.database, '1.0', 'logline database', 4.85 * 1024 * 1024);
+                LoggerWebSQL.db.transaction(tx => {
+                    tx.executeSql(
+                        'CREATE TABLE IF NOT EXISTS logs (time, namespace, level, descriptor, data)', [],
+                        () => {
+                            LoggerWebSQL.status = Logger.STATUS.INITED;
+                            Promise.resolve();
+                        },
+                        () => {
+                            LoggerWebSQL.status = Logger.STATUS.FAILED;
+                            Promise.reject(false);
+                        }
+                    );
+                });
+            } catch (e) {
+                event.fire('error', { identifier: 'websql', message: e.message });
+                Promise.reject(false);
+            }
+        });
     }
 
     static get(from?: number, to?: number, callback?: any): descriptor[] {
         return [];
-    }
-
-    static clean() {
     }
 
     static support() {

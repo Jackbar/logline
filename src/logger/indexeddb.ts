@@ -3,7 +3,7 @@ import * as util from "../lib/util";
 import * as event from '../lib/event';
 
 
-class LoggerIndexedDB extends Logger implements iLogger {
+class LoggerIndexedDB extends Logger {
     constructor(namespace: string) {
         super(namespace);
     }
