@@ -1,6 +1,6 @@
 {
   "name": "logline",
-  "description": "logs for the frontend",
+  "description": "persistent HTML5 log agent with multiple local stores",
   "main": "dist/logline.min.js",
   "authors": [
     "latel <latelx64@gmail.com>"
